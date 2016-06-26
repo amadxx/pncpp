@@ -1,5 +1,5 @@
 # gxxtypes
-Simple wrapper (based on ctypes) for shared librares compiled by GCC 
+Simple wrapper (based on ctypes) for C++ shared librares compiled by GCC 
 
 # Overview 
 
