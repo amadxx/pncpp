@@ -11,7 +11,7 @@ It calls methods directrly using ctypes, so anythyng should be modified in libra
 
 GCC style name mangling is used to generate function name signature, so only libraries compiled by gcc are supported.
 
-## Wrapping a C++ class exapmle
+## Wrapping a C++ class example
 
 C++ code:
     
