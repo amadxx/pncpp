@@ -5,6 +5,8 @@ Simple wrapper (based on ctypes) for C++ shared librares compiled by GCC
 
 ## Wrapping a C++ class exapmle
 
+See more examples at: https://github.com/amadxx/gxxtypes/tree/master/examples
+
 C++ code:
     
     // MyClass.h
