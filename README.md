@@ -7,7 +7,7 @@ See [wiki](https://github.com/amadxx/gxxtypes/wiki) for more information.
 
 Gxxtypes allows to easily wrap C++ classes in shared libraries loaded by ctypes on Linux and Windows.
 
-It calls methods directrly using ctypes, so anythyng should be modified in library.
+It calls methods directrly using ctypes, so nothing should be modified in library.
 
 GCC style name mangling is used to generate function name signature, so only libraries compiled by gcc are supported.
 
