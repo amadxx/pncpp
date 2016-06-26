@@ -15,46 +15,81 @@ GCC style name mangling is used to generate function name signature, so only lib
 
 C++ code:
     
-    // MyClass.h
-    class MyClass
+    #include <iostream>
+    
+    using namespace std;
+    
+    class HelloWorld
     {
-        MyClass();
-        int foo(short);
-        ~MyClass();
+        public:
+            const char* text;
+            HelloWorld(const char* text);
+            void print_text(int some_int);
+            ~HelloWorld();
     };
-
-    // MyClass.cpp
-    MyClass::MyClass()
+    
+    HelloWorld::HelloWorld(const char* text):text(text)
     {
+        cout<<"HelloWorld::HelloWorld("<<this<<")"<<endl;
     }
-
-    int foo(short x)
+    
+    void HelloWorld::print_text(int some_int)
     {
-        return x*3;
+        cout<<"print_text: "<<text<<endl;
+        cout<<"some_int: "<<some_int<<endl;
     }
-
-    MyClass::~MyClass()
+    
+    HelloWorld::~HelloWorld()
     {
+        cout<<"HelloWorld::~HelloWorld("<<this<<")"<<endl;
     }
 
 Python wrapper:
 
     from gxxtypes import *
+    import ctypes
     
-    cxx_struct(virtual=False)
-    class MyClass:
-
-        def __init__():
-            super(MyClass, self).__init__()
-
-        @cxx_constructor()
-        def construct():
+    @cxx_struct(virtual=False)
+    class HelloWorld(CXXStruct):
+    
+        _fields_ = [("text", ctypes.c_char_p)]
+    
+        def __init__(self, text):
+            super(HelloWorld, self).__init__()
+            self.construct(text)
+    
+        @cxx_constructor(t_char.const().ptr())
+        def construct(self, text):
             pass
-
-        @cxx_method(t_int, t_short)
-        def foo(x):
+    
+        @cxx_method(t_void, t_int)
+        def print_text(self, some_int):
             pass
-
+    
         @cxx_destructor()
-        def destruct():
+        def destroy(self):
             pass
+
+Usage:
+
+    if __name__ == '__main__':
+
+        hw_lib = ctypes.CDLL("hw.dll")  # or 'hw.so'
+    
+        HelloWorld.link_with(hw_lib)
+    
+        x = HelloWorld("Hello, world!")
+        x.print_text(42)
+        x.struct.text = "Other text from python"
+        x.print_text(777)
+    
+        x.destroy()
+
+Output:
+
+    HelloWorld::HelloWorld(0x24f0090)
+    print_text: Hello, world!
+    some_int: 42
+    print_text: Other text from python
+    some_int: 777
+    HelloWorld::~HelloWorld(0x24f0090)
