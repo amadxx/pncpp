@@ -80,7 +80,7 @@ Usage:
     
         x = HelloWorld("Hello, world!")
         x.print_text(42)
-        x.struct.text = "Other text from python"
+        x.text = "Other text from python"
         x.print_text(777)
     
         x.destroy()
