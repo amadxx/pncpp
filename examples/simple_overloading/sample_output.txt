@@ -1,0 +1,6 @@
+(ptr) Text:  foo1
+(ptr) Value: 101
+foo(ClassA*)
+(ref) Text:  foo2
+(ref) Value: 202
+foo(ClassA&)

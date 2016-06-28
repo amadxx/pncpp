@@ -1,0 +1,7 @@
+HelloWorld::HelloWorld(0x2560090)
+text: Hello, world!
+print_text: Hello, world!
+some_int: 42
+print_text: Other text from python
+some_int: 777
+HelloWorld::~HelloWorld(0x2560090)

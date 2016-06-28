@@ -28,8 +28,9 @@ if __name__ == '__main__':
     HelloWorld.link_with(hw_lib)
 
     x = HelloWorld("Hello, world!")
+    print("text: %s" % x.text)
     x.print_text(42)
-    x.struct.text = "Other text from python"
+    x.text = "Other text from python"
     x.print_text(777)
 
     x.destroy()
