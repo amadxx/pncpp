@@ -1,5 +1,5 @@
 # gxxtypes
-Simple wrapper (based on ctypes) for C++ shared librares compiled by GCC.
+Simple wrapper (based on ctypes) for C++ shared librares.
 
 See [wiki](https://github.com/amadxx/gxxtypes/wiki) for more information.
 
