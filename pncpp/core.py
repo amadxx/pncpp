@@ -11,7 +11,7 @@ __maintainer__ = "Dmitry Pavliuk"
 __email__ = "dmitry.pavluk@gmail.com"
 __status__ = "Development"
 
-import gxxtypes.mangle as mg
+import pncpp.itanium_abi_mangle as mg
 import ctypes
 import inspect
 

@@ -1,5 +1,8 @@
 """
-Utility classes for C++ name mangling (GCC convention)
+Utility classes for C++ name mangling (Itanium C++ ABI)
+
+https://mentorembedded.github.io/cxx-abi/abi.html
+
 """
 
 __author__ = "Dmitry Pavliuk"

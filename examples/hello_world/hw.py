@@ -1,4 +1,4 @@
-from gxxtypes import *
+from pncpp import *
 import ctypes
 
 @cxx_struct(virtual=False)

@@ -1,11 +1,11 @@
-# gxxtypes
-Simple wrapper (based on ctypes) for C++ shared librares.
+# pncpp
+Python native C++ library wrapper and name mangle tool
 
-See [wiki](https://github.com/amadxx/gxxtypes/wiki) for more information.
+See [wiki](https://github.com/amadxx/pncpp/wiki) for more information.
 
 # Overview 
 
-Gxxtypes allows to easily wrap C++ classes in shared libraries loaded by ctypes on Linux and Windows.
+pncpp allows to easily wrap C++ classes in shared libraries loaded by ctypes on Linux and Windows.
 
 It calls methods directrly using ctypes, so nothing should be modified in library.
 
@@ -46,7 +46,7 @@ C++ code:
 
 Python wrapper:
 
-    from gxxtypes import *
+    from pncpp import *
     import ctypes
     
     @cxx_struct(virtual=False)
