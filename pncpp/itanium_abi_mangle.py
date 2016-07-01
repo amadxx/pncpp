@@ -62,6 +62,15 @@ class TemplateArg(object):
             return "T%d_" % (self.idx - 1)
 
 
+class VTable(object):
+
+    def __init__(self, name):
+        self.name = name
+
+    def __str__(self):
+        return "_ZTV%s" % self.name
+
+
 class Type(object):
 
     def __init__(self, type_obj, reference_type = 0, const = False):
@@ -215,6 +224,9 @@ class TypeSig(object):
 
     def ref_type(self, const = False):
         return Type(self.name, Ref.BY_REFERENCE, const)
+
+    def vtable(self):
+        return VTable(self.name)
 
 
 def struct(name):
