@@ -93,12 +93,15 @@ class SelfTypeProxy(SelfTypeRefProxy):
         self.idx = idx
 
 
-def cxx_struct(name=None, virtual=True, owner=None):
+def cxx_struct(name=None, virtual=0, owner=None):
 
     def decorator(cxx_struct):
         fields = []
+
         if virtual:
-            fields.append(('__vtable', ctypes.c_void_p))
+            vtable_type = (ctypes.c_void_p * (virtual + 4)) # ?(1), typeinfo(1), destructor(2)
+            cxx_struct._vtable_ = vtable_type()
+            fields.append(('__vtable', ctypes.POINTER(vtable_type)))
         fields.extend(cxx_struct._fields_)
 
         cls_name = [cxx_struct.__name__, name][name != None]
@@ -122,22 +125,35 @@ def cxx_struct(name=None, virtual=True, owner=None):
     return decorator
 
 
+def _new_copy(src):
+    dst = type(src)()
+    ctypes.pointer(dst)[0] = src
+    return dst
+
+
+def _ptr_copy(dst_ptr, src_ptr):
+    dst_ptr[0] = src_ptr[0]
+
+
 class CXXMethod(object):
 
-    def __init__(self, mtype, ret_type, *args, **kwargs):
+    def __init__(self, mtype, fn, ret_type, *args, **kwargs):
 
         self.name = None
         self.static = False
+        self.override = False
 
         for k, v in kwargs.iteritems():
             setattr(self, k, v)
 
+        self._py_func = fn
         self._ret = ret_type
         self._args = args
         self._type = mtype
         self.c_args = None
         self.parent = None
         self.c_method = None
+        self.v_method = None
 
     def _resolve_as_member(self, cls):
         if not issubclass(cls, CXXStruct):
@@ -162,6 +178,18 @@ class CXXMethod(object):
         self.c_args = tuple([ctypes.POINTER(cls.CStructure)] + [x.get_ctypes_type() for x in self._args if x is not None])
         c_method.argtypes = self.c_args
         self.c_method = c_method
+
+        VMType = ctypes.CFUNCTYPE(c_method.restype, *c_method.argtypes)
+
+        self.v_method = VMType(self._py_func)
+
+        for i, vt_entry in enumerate(cls._vtable_):
+            fptr = ctypes.cast(c_method, ctypes.c_void_p)
+            print "VTABLE RESOLVE [%d]: %x <> %x" % (i, vt_entry or 0, fptr.value)
+            if vt_entry == fptr.value:
+                print "VTABLE RESOLVED [%d]: %x == %x" % (i, vt_entry or 0, fptr.value)
+                if self.override:
+                    cls._vtable[i] = self.v_method
 
     def __get__(self, obj, objtype=None):
         if obj is None:
@@ -219,19 +247,19 @@ class CXXMethodInvoke(object):
 
 def cxx_method(ret_type, *args, **kwargs):
     def dec(fn):
-        return CXXMethod(0, ret_type, *args, **kwargs)
+        return CXXMethod(0, fn, ret_type, *args, **kwargs)
     return dec
 
 
 def cxx_constructor(*args):
     def dec(fn):
-        return CXXMethod(1, t_void, *args)
+        return CXXMethod(1, fn, t_void, *args)
     return dec
 
 
 def cxx_destructor(*args):
     def dec(fn):
-        return CXXMethod(2, t_void, *args)
+        return CXXMethod(2, fn, t_void, *args)
     return dec
 
 
@@ -240,11 +268,14 @@ class CXXStruct(object):
     _cdll = None
     _mangled = None
     _fields_ = None
+    _vtable_ = None
 
     @classmethod
     def link_with(cls, cdll):
         if cls._cdll == None:
             cls._cdll = cdll
+            orig_vtable = type(cls._vtable_).in_dll(cls._cdll, str(cls._mangled.vtable()))
+            cls._vtable_ = _new_copy(orig_vtable)
         else:
             raise Exception("Already linked with CDLL")
 
@@ -278,6 +309,10 @@ class CXXStruct(object):
     def __init__(self):
         self.struct = self.CStructure()
         self.this = ctypes.pointer(self.struct)
+
+    def override_vtable(self):
+        if hasattr(self.struct, '__vtable'):
+            self.struct.__vtable = ctypes.pointer(type(self)._vtable_)
 
     def __getattr__(self, item):
         if item != "struct" and hasattr(self.struct, item):
