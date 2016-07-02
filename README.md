@@ -49,7 +49,7 @@ Python wrapper:
     from pncpp import *
     import ctypes
     
-    @cxx_struct(virtual=False)
+    @cxx_struct(virtual=0)
     class HelloWorld(CXXStruct):
     
         _fields_ = [("text", ctypes.c_char_p)]

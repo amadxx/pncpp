@@ -1,0 +1,12 @@
+SampleClass::SampleClass(42)
+SampleClass::run_cpp (C++ code):
+    cpp_member: 42
+    python_member: 77
+    cpp_function(): This is CPP function
+    python_function(): This is python function
+SampleClass::run_python (Python code):
+    cpp_member:  42
+    python_member:  77
+    cpp_function(): This is CPP function
+    python_function(): This is python function
+SampleClass::~SampleClass()

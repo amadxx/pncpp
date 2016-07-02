@@ -6,7 +6,7 @@ __author__ = "Dmitry Pavliuk"
 __copyright__ = "Copyright 2016, Dmitry Pavliuk"
 __credits__ = ["Dmitry Pavliuk"]
 __license__ = "MIT"
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 __maintainer__ = "Dmitry Pavliuk"
 __email__ = "dmitry.pavluk@gmail.com"
 __status__ = "Development"
@@ -173,6 +173,15 @@ class CXXMethod(object):
             return
 
         m_args = [x.get_mangled_type() for x in self._args]
+        prev = None
+        prev_i = 2
+        for i, m_arg in enumerate(m_args):
+            if str(m_arg) == str(prev):
+                m_args[i] = mg.s_arg(prev_i)
+                prev_i += 1
+            else:
+                prev = m_arg
+
         if len(m_args) == 0:
             m_args.append(mg.m_void)
         m_method = \
@@ -191,14 +200,19 @@ class CXXMethod(object):
         self.v_method = VMType(CXXClassMethodAdapter(self._py_func, cls._pyobject_))
 
         if cls._vtable_:
+            vtable_resolved = False
             for i, vt_entry in enumerate(cls._vtable_):
                 fptr = ctypes.cast(c_method, ctypes.c_void_p)
                 #print "VTABLE RESOLVE [%d]: %x <> %x" % (i, vt_entry or 0, fptr.value)
                 if vt_entry == fptr.value:
-                    print "VTABLE RESOLVED [%d]: %x == %x" % (i, vt_entry or 0, fptr.value)
+                    #print "VTABLE RESOLVED [%d]: %x == %x" % (i, vt_entry or 0, fptr.value)
                     if self.override:
                         cls._vtable_[i] = ctypes.cast(self.v_method, ctypes.c_void_p)
-                        print "VTABLE OVERRIDE [%d]: %x =  %x" % (i, cls._vtable_[i] or 0, fptr.value)
+                        vtable_resolved = True
+                        break
+                        #print "VTABLE OVERRIDE [%d]: %x =  %x" % (i, cls._vtable_[i] or 0, fptr.value)
+            if self.override and not vtable_resolved:
+                raise RuntimeError("Can't override virtual function '%s': not found in vtable" % self.name)
 
     def __get__(self, obj, objtype=None):
         if obj is None:
@@ -207,8 +221,6 @@ class CXXMethod(object):
             return CXXMethodInvoke(obj, self)
 
     def __call__(self, *args):
-        if self.override:
-            return self._py_func(*args)
 
         nargs = list(args)
         for i, arg in enumerate(nargs):
@@ -218,8 +230,10 @@ class CXXMethod(object):
                     nargs[i] = arg.this
                 elif issubclass(c_type, ctypes.Structure):
                     nargs[i] = arg.struct
-
-        result = self.c_method(*nargs)
+        if self.override:
+            result = self.v_method(*nargs)
+        else:
+            result = self.c_method(*nargs)
         return result
 
 
@@ -264,7 +278,7 @@ class CXXMethodInvoke(object):
         self._method = method
 
     def __call__(self, *args, **kwargs):
-        self._method(self._obj, *args, **kwargs)
+        return self._method(self._obj, *args, **kwargs)
 
 
 def cxx_method(ret_type, *args, **kwargs):
@@ -346,16 +360,15 @@ class CXXStruct(object):
 
     def override_vtable(self):
 
-
         if hasattr(self.struct, '_vtable_'):
-            print("override before: %x" % (ctypes.cast(self.struct._vtable_, ctypes.c_void_p).value or 0))
-            _vtable_dump(self._orig_vtable_)
+            #print("override before: %x" % (ctypes.cast(self.struct._vtable_, ctypes.c_void_p).value or 0))
+            #_vtable_dump(self._orig_vtable_)
 
             new_vtable_addr = ctypes.cast(self._vtable_, ctypes.c_void_p).value + 0x10  # TODO: describe offset
 
             self.struct._vtable_ = ctypes.cast(ctypes.c_void_p(new_vtable_addr), ctypes.POINTER(type(self._vtable_)))
-            print("override after: %x" % ctypes.cast(self.struct._vtable_, ctypes.c_void_p).value)
-            _vtable_dump(self._vtable_)
+            #print("override after: %x" % ctypes.cast(self.struct._vtable_, ctypes.c_void_p).value)
+            #_vtable_dump(self._vtable_)
 
     def __getattr__(self, item):
         if item != "struct" and hasattr(self.struct, item):

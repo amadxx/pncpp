@@ -9,7 +9,7 @@ __author__ = "Dmitry Pavliuk"
 __copyright__ = "Copyright 2016, Dmitry Pavliuk"
 __credits__ = ["Dmitry Pavliuk"]
 __license__ = "MIT"
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 __maintainer__ = "Dmitry Pavliuk"
 __email__ = "dmitry.pavluk@gmail.com"
 __status__ = "Development"
@@ -96,7 +96,6 @@ class Type(object):
 
     def __str__(self):
         return "%s%s" % (self.flags, self.type_obj)
-
 
 
 def mkstype(c):
@@ -201,7 +200,7 @@ class TypeSig(object):
 
     def method(self, name, *args):
         parts = self.name.parts + [name]
-        return FnSig(Name(*parts), *args)
+        return FnSig(Name(*parts), Args(*args))
 
     def struct(self, name):
         args = self.name.parts + [name]

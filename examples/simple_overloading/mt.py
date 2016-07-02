@@ -1,7 +1,7 @@
 from pncpp import *
 import ctypes
 
-@cxx_struct(virtual=False)
+@cxx_struct(virtual=0)
 class ClassA(CXXStruct):
 
     _fields_ = [
