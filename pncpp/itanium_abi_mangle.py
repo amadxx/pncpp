@@ -9,7 +9,6 @@ __author__ = "Dmitry Pavliuk"
 __copyright__ = "Copyright 2016, Dmitry Pavliuk"
 __credits__ = ["Dmitry Pavliuk"]
 __license__ = "MIT"
-__version__ = "0.0.3"
 __maintainer__ = "Dmitry Pavliuk"
 __email__ = "dmitry.pavluk@gmail.com"
 __status__ = "Development"
@@ -93,6 +92,36 @@ class Type(object):
 
     def const(self):
         return Type(self.type_obj, self._reference_type, True)
+
+    def non_const(self):
+        return Type(self.type_obj, self._reference_type, False)
+
+    def deref(self):
+        if self.is_ref():
+            if issubclass(type(self.type_obj), Type):
+                return self.type_obj
+            else:
+                return self.val()
+        else:
+            raise ValueError("Can't dereference non-reference type")
+
+    def get_deref_list(self):
+        result = []
+        curr = self
+        while curr.is_ref():
+            result.append(curr)
+            curr = curr.deref()
+        result.append(curr)
+        result.reverse()
+        return result
+
+
+
+    def is_ref(self):
+        return self._reference_type > 0
+
+    def is_const(self):
+        return self._const
 
     def __str__(self):
         return "%s%s" % (self.flags, self.type_obj)

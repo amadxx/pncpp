@@ -32,6 +32,7 @@ SampleClass::~SampleClass()
 void SampleClass::python_function()
 {
     // This function implemented in python
+    print_text("    python_function(): ", "This is CPP function");
 }
 
 void SampleClass::cpp_function()

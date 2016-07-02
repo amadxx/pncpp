@@ -6,7 +6,6 @@ __author__ = "Dmitry Pavliuk"
 __copyright__ = "Copyright 2016, Dmitry Pavliuk"
 __credits__ = ["Dmitry Pavliuk"]
 __license__ = "MIT"
-__version__ = "0.0.3"
 __maintainer__ = "Dmitry Pavliuk"
 __email__ = "dmitry.pavluk@gmail.com"
 __status__ = "Development"
@@ -14,6 +13,7 @@ __status__ = "Development"
 import pncpp.itanium_abi_mangle as mg
 import ctypes
 import inspect
+import warnings
 
 
 class CXXType(object):
@@ -173,21 +173,36 @@ class CXXMethod(object):
             return
 
         m_args = [x.get_mangled_type() for x in self._args]
-        prev = None
-        prev_i = 2
-        for i, m_arg in enumerate(m_args):
-            if str(m_arg) == str(prev):
-                m_args[i] = mg.s_arg(prev_i)
-                prev_i += 1
-            else:
-                prev = m_arg
 
+        # handle relative type references (S_, S0_, S1, ...)
+        # Todo: move to separate method
+        prev = None
+        prev_i = 1
+        arg2idx = {}
+        for i, m_arg in enumerate(m_args):
+            str_arg = str(m_arg)
+            if m_arg.is_ref():
+                if str_arg in arg2idx:
+                    m_args[i] = mg.s_arg(arg2idx[str_arg])
+                else:
+                    for deref in m_arg.get_deref_list():
+                        str_deref = str(deref)
+                        if len(str_deref) > 1:
+                            arg2idx[str(deref)] = prev_i
+                            prev_i += 1
+
+        # functions with no arguments always have void in mangled name
         if len(m_args) == 0:
             m_args.append(mg.m_void)
+
+        # generate method signature
         m_method = \
         [cls._mangled.method(self.name, *m_args),
          cls._mangled.constructor(1, *m_args),
          cls._mangled.destructor(1)][self._type]
+        if not hasattr(cls._cdll, str(m_method)):
+            warnings.warn("Method not resolved: %s" % m_method)
+            return None
 
         c_method = getattr(cls._cdll, str(m_method))
         c_method.restype = self._ret.get_ctypes_type()
@@ -221,6 +236,8 @@ class CXXMethod(object):
             return CXXMethodInvoke(obj, self)
 
     def __call__(self, *args):
+        if not self.c_method:
+            raise AttributeError("Method not resolved")
 
         nargs = list(args)
         for i, arg in enumerate(nargs):
