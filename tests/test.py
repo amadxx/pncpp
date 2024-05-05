@@ -5,6 +5,7 @@ import subprocess
 from pncpp import *
 import platform
 import ctypes
+import os
 
 if platform.system() == "Windows":
     so_ext = ".dll"
@@ -20,7 +21,7 @@ def libname(name):
 
 def compile_files(target, *sources):
     out_name = libname(target)
-    subprocess.call(["g++"] + list(sources) + ["-shared", "-fpic", "-fdump-class-hierarchy", "-o", out_name])
+    subprocess.call(["g++"] + list(sources) + ["-shared", "-fpic", "-fdump-lang-class", "-o", out_name])
 
 
 def load_lib(name):
@@ -32,8 +33,8 @@ def prepare_lib(target, *sources):
     proc = subprocess.Popen(["objdump", "-t", libname(target)], stdout=subprocess.PIPE)
     output = proc.stdout.read()
     with open("%s_symbols.txt" % target, "w") as f:
-        f.write(output)
-    return load_lib(target)
+        f.write(output.decode())
+    return load_lib(os.path.abspath(target))
 
 
 def link_classes(lib, *classes):
@@ -169,25 +170,25 @@ class ABITest(unittest.TestCase):
 
     def test_mangle_v_ptr_csi_l_isc(self):
         obj = NonVirtual()
-        a = ctypes.pointer(ctypes.c_char("0"))
+        a = ctypes.pointer(ctypes.c_char(b"0"))
         b = ctypes.pointer(ctypes.c_short(0))
         c = ctypes.pointer(ctypes.c_int(0))
         obj.foo_v_ptr_csi_l_isc(a, b, c, 777, c, b, a)
 
     def test_mangle_v_const_ptr_csi_l_isc(self):
         obj = NonVirtual()
-        a = ctypes.pointer(ctypes.c_char("0"))
+        a = ctypes.pointer(ctypes.c_char(b"0"))
         b = ctypes.pointer(ctypes.c_short(0))
         c = ctypes.pointer(ctypes.c_int(0))
         obj.foo_v_const_ptr_csi_l_isc(a, b, c, 777, c, b, a)
 
     def test_mangle_v_KP_cc(self):
         obj = NonVirtual()
-        obj.foo_v_KP_cc("String1", "String2")
+        obj.foo_v_KP_cc(b"String1", b"String2")
 
     def test_virtual_mangle_v_ptr_csi_l_isc(self):
         obj = Virtual()
-        a = ctypes.pointer(ctypes.c_char("0"))
+        a = ctypes.pointer(ctypes.c_char(b"0"))
         b = ctypes.pointer(ctypes.c_short(0))
         c = ctypes.pointer(ctypes.c_int(0))
         obj.foo_v_ptr_csi_l_isc(a, b, c, 777, c, b, a)

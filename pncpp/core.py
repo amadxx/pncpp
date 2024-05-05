@@ -137,7 +137,7 @@ def _ptr_copy(dst_ptr, src_ptr):
 def _vtable_dump(vtable, max=10):
     print("vtable at: %x" % ctypes.cast(vtable, ctypes.c_void_p).value)
     for i, vt_entry in enumerate(vtable):
-        print "    %3d: %x" % (i, ctypes.cast(vt_entry, ctypes.c_void_p).value or 0)
+        print("    %3d: %x" % (i, ctypes.cast(vt_entry, ctypes.c_void_p).value or 0))
         if i > max:
             break
 
@@ -150,7 +150,7 @@ class CXXMethod(object):
         self.static = False
         self.override = False
 
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             setattr(self, k, v)
 
         self._py_func = fn

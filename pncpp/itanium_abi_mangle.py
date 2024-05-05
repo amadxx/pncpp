@@ -24,7 +24,7 @@ class Name(object):
         packed_ns = []
 
         for x in self.parts:
-            if issubclass(type(x), basestring):
+            if issubclass(type(x), str):
                 packed_ns.append("%d%s" % (len(x), x))
             else:
                 packed_ns.append(str(x))

@@ -7,4 +7,4 @@ __maintainer__ = "Dmitry Pavliuk"
 __email__ = "dmitry.pavluk@gmail.com"
 __status__ = "Development"
 
-from core import *
+from pncpp.core import *
